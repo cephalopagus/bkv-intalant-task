@@ -7,6 +7,8 @@ run:
 env-up:
 	@docker-compose up -d intalant-postgres
 
+env-down:
+	@docker compose down intalant-postgres
 
 env-port-forward:
 	@docker compose up -d port-forwarder
