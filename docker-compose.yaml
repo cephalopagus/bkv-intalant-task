@@ -9,6 +9,12 @@ services:
     volumes:
       - ./out/pgdata:/var/lib/postgresql
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 
 
   port-forwarder:
@@ -25,6 +31,22 @@ services:
       - ./migrations:/migrations
     environment:
       GOOSE_DRIVER: postgres
-      GOOSE_DBSTRING: "host=${POSTGRES_HOST} port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
+      GOOSE_DBSTRING: "host=intalant-postgres port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
     depends_on:
-      - intalant-postgres
+      intalant-postgres:
+        condition: service_healthy
+
+
+  app:
+    build: .
+    container_name: intalant-app
+    env_file: 
+      - .env
+    depends_on:
+      intalant-postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+    restart: on-failure
