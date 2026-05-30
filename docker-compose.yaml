@@ -35,6 +35,7 @@ services:
     depends_on:
       intalant-postgres:
         condition: service_healthy
+    restart: on-failure
 
 
   app:
