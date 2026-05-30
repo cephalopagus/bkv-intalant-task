@@ -9,6 +9,7 @@ import (
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id, ok := core_response.PathUint(r, "id")
 	if !ok {
+		h.logger.Error("invalid department id")
 		core_response.WriteError(w, http.StatusBadRequest, "invalid id")
 		return
 	}

@@ -41,6 +41,8 @@ services:
   app:
     build: .
     container_name: intalant-app
+    volumes:
+      - ./out:/out
     env_file: 
       - .env
     depends_on:

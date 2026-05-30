@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	core_response "github.com/cephalopagus/bkv-intalant-task/internal/core/response"
+	"go.uber.org/zap"
 )
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
@@ -13,6 +14,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		ParentID *uint  `json:"parent_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		h.logger.Error("failed to decode request body", zap.Error(err))
 		core_response.WriteError(w, http.StatusBadRequest, "invalid json")
 		return
 	}

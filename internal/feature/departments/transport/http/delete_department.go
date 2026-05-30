@@ -5,11 +5,13 @@ import (
 	"strconv"
 
 	core_response "github.com/cephalopagus/bkv-intalant-task/internal/core/response"
+	"go.uber.org/zap"
 )
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, ok := core_response.PathUint(r, "id")
 	if !ok {
+		h.logger.Error("invalid department id")
 		core_response.WriteError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
@@ -24,6 +26,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	if s := r.URL.Query().Get("reassign_to_department_id"); s != "" {
 		v, err := strconv.ParseUint(s, 10, 64)
 		if err != nil {
+			h.logger.Error("invalid reassign_to_department_id", zap.String("value", s))
 			core_response.WriteError(w, http.StatusBadRequest, "invalid reassign_to_department_id")
 			return
 		}
