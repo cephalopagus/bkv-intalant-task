@@ -1,0 +1,1 @@
+2026-05-30T22-35-23.95705	FATAL	app/main.go:37	failed to init postgres connection pool	{"error": "connect db: failed to connect to `user=intalant_user database=intalant_db`: 172.18.0.3:5432 (intalant-postgres): dial error: dial tcp 172.18.0.3:5432: connect: connection refused"}
