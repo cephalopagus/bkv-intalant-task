@@ -9,6 +9,9 @@ import (
 	departments_repository_postgres "github.com/cephalopagus/bkv-intalant-task/internal/feature/departments/repository/postgres"
 	departments_service "github.com/cephalopagus/bkv-intalant-task/internal/feature/departments/service"
 	departments_transport_http "github.com/cephalopagus/bkv-intalant-task/internal/feature/departments/transport/http"
+	employee_repository_postgres "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/repository/postgres"
+	employee_service "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/service"
+	employee_transport_http "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/transport/http"
 )
 
 func main() {
@@ -16,7 +19,6 @@ func main() {
 		Level: slog.LevelInfo,
 	})))
 
-	// --- config + db ---
 	cfg := core_repository_postgres.Load()
 
 	db, err := core_repository_postgres.NewPostgresDB(cfg)
@@ -27,11 +29,18 @@ func main() {
 	slog.Info("connected to db", "host", cfg.DBHost, "db", cfg.DBName)
 
 	deptRepo := departments_repository_postgres.NewDepartmentRepository(db)
-	deptSvc := departments_service.New(deptRepo)
-	deptH := departments_transport_http.New(deptSvc)
+	empRepo := employee_repository_postgres.NewEmployeeRepository(db)
+
+	deptSvc := departments_service.NewDepartmentService(deptRepo)
+	empSvc := employee_service.NewEmployeeService(empRepo, deptRepo)
 
 	mux := http.NewServeMux()
+
+	deptH := departments_transport_http.NewDepartmentHandler(deptSvc)
+	empH := employee_transport_http.NewEmployeeHandler(empSvc)
+
 	deptH.Register(mux)
+	empH.Register(mux)
 
 	addr := ":8080"
 	slog.Info("starting server", "addr", addr)
