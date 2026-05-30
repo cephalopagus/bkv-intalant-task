@@ -42,6 +42,7 @@
 3. Docker + docker-compose
 4. GORM 
 5. Goose migration
+6. Zapcore logger
 
 /---------------------------------------------------------------/
 
@@ -80,3 +81,8 @@
 Миграции(если нужно):
 1. PowerShell >> docker compose run --rm -e GOOSE_COMMAND=up migrate
 2. PowerShell >> docker compose run --rm -e GOOSE_COMMAND=down migrate
+
+/---------------------------------------------------------------/
+
+Посмотреть логи:
+1. Отрыть папку 'out/logs'
