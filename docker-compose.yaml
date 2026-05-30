@@ -24,20 +24,6 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
 
-
-  migrate:
-    image: kukymbr/goose-docker
-    volumes:
-      - ./migrations:/migrations
-    environment:
-      GOOSE_DRIVER: postgres
-      GOOSE_DBSTRING: "host=intalant-postgres port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
-    depends_on:
-      intalant-postgres:
-        condition: service_healthy
-    
-
-
   app:
     build: .
     container_name: intalant-app
@@ -48,8 +34,6 @@ services:
     depends_on:
       intalant-postgres:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     ports:
       - "8080:8080"
     restart: on-failure

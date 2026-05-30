@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,8 +15,11 @@ import (
 	employee_repository_postgres "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/repository/postgres"
 	employee_service "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/service"
 	employee_transport_http "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/transport/http"
+	migrate "github.com/cephalopagus/bkv-intalant-task/migrations"
 	"go.uber.org/zap"
 )
+
+var migrationsFS embed.FS
 
 func main() {
 
@@ -37,6 +41,12 @@ func main() {
 		zap.String("host", cfg.DBHost),
 		zap.String("db", cfg.DBName),
 	)
+
+	sqlDB, _ := db.DB()
+	if err := migrate.Up(sqlDB); err != nil {
+		logger.Fatal("migrations failed", zap.Error(err))
+	}
+	logger.Info("migrations applied")
 
 	deptRepo := departments_repository_postgres.NewDepartmentRepository(db)
 	empRepo := employee_repository_postgres.NewEmployeeRepository(db)

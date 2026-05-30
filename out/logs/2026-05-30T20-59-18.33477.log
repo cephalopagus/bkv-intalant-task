@@ -1,4 +1,0 @@
-2026-05-30T20-59-18.37036	INFO	app/main.go:36	connected to db	{"host": "intalant-postgres", "db": "intalant_db"}
-2026-05-30T20-59-18.37102	INFO	app/main.go:57	starting server	{"addr": ":8080"}
-2026-05-30T21-00-07.47701	INFO	service/get_department.go:10	getting department with tree	{"id": 1, "depth": 1, "include_employees": true}
-2026-05-30T21-00-07.79466	INFO	middleware/middleware.go:15	request	{"method": "GET", "path": "/departments/1", "duration": "317.673959ms"}
