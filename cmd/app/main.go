@@ -1,10 +1,12 @@
 package main
 
 import (
-	"log/slog"
+	"fmt"
 	"net/http"
 	"os"
 
+	core_logger "github.com/cephalopagus/bkv-intalant-task/internal/core/logger"
+	core_middleware "github.com/cephalopagus/bkv-intalant-task/internal/core/middleware"
 	core_repository_postgres "github.com/cephalopagus/bkv-intalant-task/internal/core/repository/postgres"
 	departments_repository_postgres "github.com/cephalopagus/bkv-intalant-task/internal/feature/departments/repository/postgres"
 	departments_service "github.com/cephalopagus/bkv-intalant-task/internal/feature/departments/service"
@@ -12,40 +14,49 @@ import (
 	employee_repository_postgres "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/repository/postgres"
 	employee_service "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/service"
 	employee_transport_http "github.com/cephalopagus/bkv-intalant-task/internal/feature/employee/transport/http"
+	"go.uber.org/zap"
 )
 
 func main() {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	})))
+
+	logger, err := core_logger.NewLogger(core_logger.NewConfigMust())
+	if err != nil {
+		fmt.Println("failed to init app logger")
+		os.Exit(1)
+	}
+	defer logger.Close()
 
 	cfg := core_repository_postgres.Load()
 
 	db, err := core_repository_postgres.NewPostgresDB(cfg)
 	if err != nil {
-		slog.Error("failed to connect to db", "err", err)
+		logger.Fatal("failed to init postgres connection pool", zap.Error(err))
 		os.Exit(1)
 	}
-	slog.Info("connected to db", "host", cfg.DBHost, "db", cfg.DBName)
+	logger.Info("connected to db",
+		zap.String("host", cfg.DBHost),
+		zap.String("db", cfg.DBName),
+	)
 
 	deptRepo := departments_repository_postgres.NewDepartmentRepository(db)
 	empRepo := employee_repository_postgres.NewEmployeeRepository(db)
 
-	deptSvc := departments_service.NewDepartmentService(deptRepo)
-	empSvc := employee_service.NewEmployeeService(empRepo, deptRepo)
+	deptSvc := departments_service.NewDepartmentService(deptRepo, logger)
+	empSvc := employee_service.NewEmployeeService(empRepo, deptRepo, logger)
 
 	mux := http.NewServeMux()
 
-	deptH := departments_transport_http.NewDepartmentHandler(deptSvc)
-	empH := employee_transport_http.NewEmployeeHandler(empSvc)
+	deptH := departments_transport_http.NewDepartmentHandler(deptSvc, logger)
+	empH := employee_transport_http.NewEmployeeHandler(empSvc, logger)
 
 	deptH.Register(mux)
 	empH.Register(mux)
 
 	addr := ":8080"
-	slog.Info("starting server", "addr", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
-		slog.Error("ListenAndServe", "err", err)
+
+	logger.Info("starting server", zap.String("addr", addr))
+	if err := http.ListenAndServe(addr, core_middleware.Logging(mux, logger)); err != nil {
+		logger.Fatal("ListenAndServe", zap.Error(err))
 		os.Exit(1)
 	}
 
